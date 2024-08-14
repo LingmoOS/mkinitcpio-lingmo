@@ -165,7 +165,7 @@ _search_for_lingmodevice() {
 
 _verify_checksum() {
     local _status
-    cd "/run/lingmo/bootmnt/${lingmobasedir}/${arch}" || exit 1
+    cd "/run/lingmo/bootmnt/${lingmo_boot}/${arch}" || exit 1
     sha512sum -c lingmosys.sha512 >/tmp/checksum.log 2>&1
     _status=$?
     cd -- "${OLDPWD}" || exit 1
@@ -175,7 +175,7 @@ _verify_checksum() {
 _verify_signature() {
     local _status
     local sigfile="${1}"
-    cd "/run/lingmo/bootmnt/${lingmobasedir}/${arch}" || exit 1
+    cd "/run/lingmo/bootmnt/${lingmo_boot}/${arch}" || exit 1
     gpg --homedir /gpg --status-fd 1 --verify "${sigfile}" 2>/dev/null | grep -E '^\[GNUPG:\] GOODSIG'
     _status=$?
     cd -- "${OLDPWD}" || exit 1
@@ -197,7 +197,7 @@ _verify_cms_signature() {
         cafile="$certfile"
     fi
 
-    cd "/run/lingmo/bootmnt/${lingmobasedir}/${arch}" || exit 1
+    cd "/run/lingmo/bootmnt/${lingmo_boot}/${arch}" || exit 1
     # "-purpose any" can be removed once the issue mentioned above is fixed.
     openssl cms \
         -verify \
@@ -220,7 +220,7 @@ run_hook() {
     arch="$(getarg 'arch' "$(uname -m)")"
     copytoram="$(getarg 'copytoram' 'auto')"
     copytoram_size="$(getarg 'copytoram_size' '75%')"
-    lingmobasedir="$(getarg 'lingmobasedir' 'arch')"
+    lingmo_boot="$(getarg 'lingmo_boot' 'arch')"
     dm_snap_prefix="$(getarg 'dm_snap_prefix' 'arch')"
     lingmolabel="$(getarg 'lingmolabel')"
     if [ -n "$lingmolabel" ]; then
@@ -273,17 +273,17 @@ lingmo_mount_handler() {
     # We need this block at the top for early failure
     # but also to be able to give the fs_img to CMS verification.
     # (sha512sum files contain the image, CMS files does not)
-    if [ -f "/run/lingmo/bootmnt/${lingmobasedir}/${arch}/lingmosys.sfs" ]; then
-        fs_img="/run/lingmo/bootmnt/${lingmobasedir}/${arch}/lingmosys.sfs"
-    elif [ -f "/run/lingmo/bootmnt/${lingmobasedir}/${arch}/lingmosys.erofs" ]; then
-        fs_img="/run/lingmo/bootmnt/${lingmobasedir}/${arch}/lingmosys.erofs"
+    if [ -f "/run/lingmo/bootmnt/${lingmo_boot}/${arch}/lingmosys.sfs" ]; then
+        fs_img="/run/lingmo/bootmnt/${lingmo_boot}/${arch}/lingmosys.sfs"
+    elif [ -f "/run/lingmo/bootmnt/${lingmo_boot}/${arch}/lingmosys.erofs" ]; then
+        fs_img="/run/lingmo/bootmnt/${lingmo_boot}/${arch}/lingmosys.erofs"
     else
         echo "ERROR: no root file system image found"
         launch_interactive_shell
     fi
 
     if [ "$(getarg 'checksum')" = "y" ]; then
-        if [ -f "/run/lingmo/bootmnt/${lingmobasedir}/${arch}/lingmosys.sha512" ]; then
+        if [ -f "/run/lingmo/bootmnt/${lingmo_boot}/${arch}/lingmosys.sha512" ]; then
             msg ":: Self-test requested, please wait..."
             if _verify_checksum; then
                 msg "Checksum is OK, continue booting."
@@ -293,7 +293,7 @@ lingmo_mount_handler() {
                 launch_interactive_shell
             fi
         else
-            echo "ERROR: checksum=y option specified but ${lingmobasedir}/${arch}/lingmosys.sha512 not found"
+            echo "ERROR: checksum=y option specified but ${lingmo_boot}/${arch}/lingmosys.sha512 not found"
             launch_interactive_shell
         fi
     fi
@@ -315,7 +315,7 @@ lingmo_mount_handler() {
                 launch_interactive_shell
             fi
         else
-            echo "ERROR: verify=y option specified but GPG signature not found in ${lingmobasedir}/${arch}/"
+            echo "ERROR: verify=y option specified but GPG signature not found in ${lingmo_boot}/${arch}/"
             launch_interactive_shell
         fi
     fi
@@ -332,7 +332,7 @@ lingmo_mount_handler() {
                 launch_interactive_shell
             fi
         else
-            echo "ERROR: cms_verify=y option specified but CMS signature not found in ${lingmobasedir}/${arch}/"
+            echo "ERROR: cms_verify=y option specified but CMS signature not found in ${lingmo_boot}/${arch}/"
             launch_interactive_shell
         fi
     fi

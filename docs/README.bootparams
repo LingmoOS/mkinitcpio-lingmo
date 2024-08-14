@@ -21,7 +21,7 @@ INDEX
                          Default: (unset)
 * lingmodevice=         Set the device node where lingmo medium is located.
                          Default: "/dev/disk/by-label/${lingmolabel}"
-* lingmobasedir=        Set the base directory where all files reside.
+* lingmo_boot=        Set the base directory where all files reside.
                          Default: "arch"
 * lingmosearchuuid=     UUID used in searching for a device where lingmo
                          files reside. If a device with such UUID does not
@@ -104,7 +104,7 @@ INDEX
 
 ** hooks/lingmo_pxe_http
 
-* lingmo_http_srv=      Set an HTTP URL (must end with /) where ${lingmobasedir}
+* lingmo_http_srv=      Set an HTTP URL (must end with /) where ${lingmo_boot}
                          is found with all *.sfs files.
                          In the IP/domain part if ${pxeserver} is used, use PXE IP.
                          Default: (unset)
