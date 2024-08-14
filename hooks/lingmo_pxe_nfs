@@ -1,0 +1,41 @@
+#!/usr/bin/ash
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
+run_hook() {
+    if [ -n "$(getarg 'ip')" ] && [ -n "$(getarg 'lingmo_nfs_srv')" ]; then
+
+        lingmo_nfs_srv=$(eval echo "${lingmo_nfs_srv}")
+
+        export mount_handler="lingmo_nfs_mount_handler"
+    fi
+}
+
+lingmo_nfs_mount_handler() {
+    local mount_status lingmo_nfs_opt
+    newroot="${1}"
+    mkdir -p "/run/lingmo/bootmnt"
+    msg ":: Mounting '${lingmo_nfs_srv}'"
+    lingmo_nfs_opt="$(getarg 'lingmo_nfs_opt')"
+    if [ -n "${lingmo_nfs_opt}" ]; then
+        nfsmount -o "${lingmo_nfs_opt}" "${lingmo_nfs_srv}" "/run/lingmo/bootmnt"
+        mount_status=$?
+    else
+        nfsmount "${lingmo_nfs_srv}" "/run/lingmo/bootmnt"
+        mount_status=$?
+    fi
+    if [ "$mount_status" -gt 0 ]; then
+        echo "ERROR: Mounting '${lingmo_nfs_srv}'"
+        echo "   Falling back to interactive prompt"
+        echo "   You can try to fix the problem manually, log out when you are finished"
+        launch_interactive_shell
+    fi
+
+    if [ "${copytoram}" != "n" ]; then
+        copytoram="y"
+    fi
+
+    lingmo_mount_handler "${newroot}"
+}
+
+# vim: set ft=sh:

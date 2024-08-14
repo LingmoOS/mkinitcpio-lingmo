@@ -1,0 +1,41 @@
+# Maintainer: Lingmo OS Team <team@lingmo.org>
+
+pkgname=mkinitcpio-lingmo
+pkgver=71
+pkgrel=1
+pkgdesc="Initcpio scripts used by lingmo iso"
+arch=(any)
+url="https://github.com/LingmoOS/mkinitcpio-lingmo"
+license=(GPL-3.0-or-later)
+depends=(
+  bash
+  device-mapper
+  mkinitcpio
+)
+makedepends=(git)
+checkdepends=(
+  shellcheck
+  shfmt
+)
+optdepends=(
+  'curl: for PXE over HTTP'
+  'gnupg: for PGP signature verification of rootfs over PXE'
+  'mkinitcpio-nfs-utils: for PXE over NFS'
+  'nbd: for PXE over NBD'
+  'openssl: for CMS signature verification of rootfs over PXE'
+  'pv: for status display during copy to RAM'
+)
+source=(git+$url)
+sha512sums=('SKIP')
+validpgpkeys=(
+  '41EF7182553A87AC18196A77F27F2FDA54F067D8'  # Lingmo OS Team <team@lingmo.org>
+
+)
+
+check() {
+  make -k check -C $pkgname
+}
+
+package() {
+  make DESTDIR="$pkgdir/" PREFIX=/usr install -C $pkgname
+}
